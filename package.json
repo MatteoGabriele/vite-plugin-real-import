@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-real-import",
   "description": "A Vite plugin to measure real import sizes",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "exports": {
     ".": {
@@ -11,22 +11,16 @@
   },
   "main": "dist/vite-plugin-real-import.js",
   "types": "dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "dev": "vite build --watch",
-    "build": "tsc && vite build"
+    "build": "vite build",
+    "fix": "biome check --write",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm run build"
   },
-  "keywords": [
-    "vite",
-    "plugin",
-    "esm",
-    "typescript",
-    "real",
-    "size",
-    "bundle"
-  ],
+  "keywords": ["vite", "plugin", "esm", "typescript", "real", "size", "bundle"],
   "license": "MIT",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
