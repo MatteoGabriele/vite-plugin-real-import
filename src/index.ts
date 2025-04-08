@@ -1,12 +1,26 @@
 import { Buffer } from "node:buffer";
 import { gzipSync } from "node:zlib";
-import { build } from "esbuild";
-import { bold, cyan, dim, gray, green, lightGray } from "kolorist";
+import { build, type OutputFile } from "esbuild";
+import { cyan, dim, green } from "kolorist";
 import type { Plugin } from "vite";
 import { name } from "../package.json";
 
+const logName = cyan("[vite:real-import]");
+function log(message: string) {
+  console.log(logName, message);
+}
+
 function getSize(size: number): string {
   return `${(size / 1024).toFixed(2)} KB`;
+}
+
+function calculateFileSize(file: OutputFile): string {
+  const rawSize = Buffer.byteLength(file.text, "utf8");
+  const gzippedSize = Buffer.byteLength(gzipSync(file.text), "utf8");
+  const fileSize = getSize(rawSize);
+  const fileSizeGzip = getSize(gzippedSize);
+
+  return `${fileSize} ${dim(`| gzip: ${fileSizeGzip}`)}`;
 }
 
 export default function vitePluginRealImport(entry: string | string[]): Plugin {
@@ -14,8 +28,7 @@ export default function vitePluginRealImport(entry: string | string[]): Plugin {
     name,
     apply: "build",
     async closeBundle() {
-      const logName = cyan("[vite:real-import]");
-      console.log(`\n${logName} ${green("Measuring real import size...")}`);
+      log(green("Measuring real import size..."));
 
       try {
         const result = await build({
@@ -25,17 +38,15 @@ export default function vitePluginRealImport(entry: string | string[]): Plugin {
           write: false,
         });
 
-        const rawSize = Buffer.byteLength(result.outputFiles[0].text, "utf8");
-        const gzippedSize = Buffer.byteLength(
-          gzipSync(result.outputFiles[0].text),
-          "utf8",
-        );
-
-        const sizeLabel = dim(`| gzip: ${getSize(gzippedSize)}`);
-        console.log(`${logName} ${getSize(rawSize)} ${sizeLabel}`);
-        console.log("\n");
-      } catch (error) {
-        console.error("Error measuring size:", error);
+        for (const file of result.outputFiles) {
+          log(calculateFileSize(file));
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          log(`Error measuring size: ${error.message}`);
+        } else {
+          log("Error measuring size: unknown error");
+        }
       }
     },
   };
