@@ -1,2 +1,2 @@
 # vite-plugin-real-import
- A Vite plugin to measure real import bundle sizes
+Vite plugin to size specific imports
